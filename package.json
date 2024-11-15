@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "bedrock-protocol": "^3.41.0",
+    "yargs": "^17.7.2"
+  }
+}
