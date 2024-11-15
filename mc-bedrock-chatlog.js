@@ -26,7 +26,11 @@
 /// -u, --username    Bot username
 /// -l, --logFolder   Log folder
 /// -x, --prefix      Log file prefix
-/// -r, --raw         Log raw packets as JSON
+/// -r, --retry       Keep retrying to connect
+/// -i, --interval    Connection retry interval
+/// --raw             Log raw packets as JSON
+
+/// The bot will stop when a file named 'stop' is created in the bot's folder.
 
 /// Check if the user installed dependencies
 try
@@ -53,47 +57,52 @@ catch (error)
 const yargs = require('yargs/yargs');
 const {hideBin} = require('yargs/helpers');
 const argv = yargs(hideBin(process.argv))
-    // Server address
     .option('host', {
       alias: 'h',
       type: 'string',
       description: 'Client address',
       default: null
     })
-    // Server port
     .option('port', {
       alias: 'p',
       type: 'number',
       description: 'Client port',
       default: 19132
     })
-    // Bot username
     .option('username', {
       alias: 'u',
       type: 'string',
       description: 'Bot username',
       default: 'Server'
     })
-    // Log folder
     .option('logFolder', {
       alias: 'l',
       type: 'string',
       description: 'Log folder',
       default: './logs/'
     })
-    // Log file prefix
     .option('prefix', {
       alias: 'x',
       type: 'string',
       description: 'Log file prefix',
       default: 'chat-'
     })
-    // Log raw packet JSONs
     .option('raw', {
-      alias: 'r',
       type: 'boolean',
       description: 'Log raw packets as JSON',
       default: false
+    })
+    .option('retry', {
+      alias: 'r',
+      type: 'boolean',
+      description: 'Keep retrying to connect',
+      default: true
+    })
+    .option('interval', {
+      alias: 'i',
+      type: 'number',
+      description: 'Connection retry interval',
+      default: 30000
     }).argv;
 
 const host = argv.host;
@@ -101,7 +110,10 @@ const port = argv.port;
 const username = argv.username;
 const logFolder = argv.logFolder;
 const prefix = argv.prefix;
+const retry = argv.retry;
+const interval = argv.interval;
 const raw = argv.raw;
+const stopSignalFile = 'stop';
 
 if (host === null)
 {
@@ -110,23 +122,77 @@ if (host === null)
   process.exit(1);
 }
 
+/// Logging subsystem with rolling log files
+const {createWriteStream, existsSync, unlinkSync} = require('fs');
+let logStream = null;
+let lastLogDate = null;
+let logFile = null;
+
+function log(message)
+{
+  AllocateLogStream();
+  console.log(`(${new Date().toLocaleTimeString()}) ${message}`);
+  logStream.write(`(${new Date().toLocaleTimeString()}) ${message}\n`);
+}
+
+function GetDateStamp()
+{
+  return new Date().toISOString().slice(0, 10);
+}
+
+function AllocateLogStream()
+{
+  if (lastLogDate !== null && lastLogDate === GetDateStamp())
+  {
+    return;
+  }
+
+  logStream?.end();
+  lastLogDate = GetDateStamp();
+  logFile = `${logFolder}/${prefix}${lastLogDate}.log`;
+  logStream = createWriteStream(logFile, {flags: 'a'});
+}
+
+/// Check for stop signal
+setInterval(checkForStopSignal, 1000);
+
 /// Establish connection to the client
 const {createClient} = require('bedrock-protocol');
-const {createWriteStream} = require('fs');
 
 let client = null;
-Connect();
+let connected = false;
+TryConnect();
+
+function TryConnect()
+{
+  Connect();
+  if (!connected && retry)
+  {
+    setTimeout(() => {
+      if (!connected)
+      {
+        log(`Could not connect, retrying...`);
+        TryConnect();
+      }
+    }, interval);
+  }
+}
 
 function Connect()
 {
   client?.close();
+  log(`Connecting to ${host}:${port} as [${username}]...`);
   client = createClient({
 
     host: host,
     port: port,
     username: username,
-    offline: true
+    offline: true,
+    skipPing: true
+  });
 
+  client.on('join', () => {
+    connected = true;
   });
 
   client.on('text', (packet) => {
@@ -157,52 +223,37 @@ function Connect()
       log(`Bot [${username}] was already present on the server. (${packet.message})`);
     }
 
-    setTimeout(Connect, 5000);
-
+    if (connected)
+    {
+      connected = false;
+      TryConnect();
+    }
   });
 
-  client.on('error', (packet) => {
-    AllocateLogStream();
-    logStream.write(JSON.stringify(packet) + '\n');
+  client.on('close', () => {
+    if (connected)
+    {
+      log(`Server is stopping.`);
+      connected = false;
+      TryConnect();
+    }
   });
-}
 
-/// Logging subsystem with rolling log files
-let logStream = null;
-let lastLogDate = null;
-let logFile = null;
-
-function log(message)
-{
-  AllocateLogStream();
-  console.log(`(${new Date().toLocaleTimeString()}) ${message}`);
-  logStream.write(`(${new Date().toLocaleTimeString()}) ${message}\n`);
-}
-
-function GetDateStamp()
-{
-  return new Date().toISOString().slice(0, 10);
-}
-
-function AllocateLogStream()
-{
-  if (lastLogDate !== null && lastLogDate === GetDateStamp())
-  {
-    return;
-  }
-
-  logStream?.end();
-  lastLogDate = GetDateStamp();
-  logFile = `${logFolder}/${prefix}${lastLogDate}.log`;
-  logStream = createWriteStream(logFile, {flags: 'a'});
+  client.on('error', (error) => {
+    log(`Connection error: ${error.message}`);
+    if (connected)
+    {
+      connected = false;
+      TryConnect();
+    }
+  });
 }
 
 /// log all raw packets as JSON if requested
 if (raw)
 {
   client.on('text', (packet) => {
-    AllocateLogStream();
-    logStream.write(JSON.stringify(packet) + '\n');
+    log(JSON.stringify(packet));
   });
 }
 
@@ -418,6 +469,33 @@ function processDeaths(packet)
     }
 
     log(`* [${playerName}] ${deathReason}.`);
+  }
+}
+
+/// Stop signal handling
+function checkForStopSignal() {
+  if (existsSync(stopSignalFile)) {
+    log('Stop signal received. Terminating the bot.');
+    try
+    {
+      client?.disconnect('Bot stopped.');
+    }
+    catch
+    {
+      // ignore
+    }
+
+    try
+    {
+      client?.close();
+    }
+    catch
+    {
+      // ignore
+    }
+    
+    unlinkSync(stopSignalFile);
+    process.exit(0);
   }
 }
 
