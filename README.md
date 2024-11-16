@@ -50,3 +50,43 @@ The workaround is to switch it to spectator mode every time after connecting.
 (7:57:20) * [Player1] left the game.
 (8:41:11) * [Player2] joined the game.
 ```
+
+## Docker deployment
+Not automated yet, but here is a quick guide assuming you have the latest Docker installed on the machine:
+
+1) Pick a directory where the app will live
+2) Create a file called docker-compose.yml and paste the following content.
+
+> Make sure to replace `-h minecraft-bedrock` with minecraft docker container name 
+> or the correct server IP and make adjustments to the program arguments as needed.
+
+```
+services:
+  node-app:
+    image: node:latest
+    container_name: minecraft-bedrock-chatbot
+    working_dir: /usr/src/app
+    volumes:
+      - ./mc-bedrock-chatlog:/usr/src/app
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    command: ["sh", "-c", "apt-get update && apt-get install -y cmake && npm install && node mc-bedrock-chatlog.js -h minecraft-bedrock"]
+    stdin_open: true # Keep the container running
+    tty: true        # Allocate a pseudo-TTY for the container
+    restart: unless-stopped
+```
+> The containers should also be in the same virtual network. If you have a fixed network for minecraft, you can connect to it by name like this.
+```
+    networks:
+      - internet
+      
+networks:
+    internet:
+        external: true
+        name: "internet"
+```
+> The network should have internet access, so the bot can download the required node packages.
+
+4) Git Clone or download this repository here (the process will create mc-bedrock-chatlog subdirectory)
+5) Run `docker compose up -d` from the main directory.
+6) Your logs should be in the `mc-bedrock-chatlog/logs` directory.
