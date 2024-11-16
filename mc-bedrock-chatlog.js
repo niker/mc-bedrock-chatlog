@@ -75,7 +75,7 @@ const argv = yargs(hideBin(process.argv)).option('host', {
   alias: 'l',
   type: 'string',
   description: 'Log folder',
-  default: './logs/'
+  default: './logs'
 }).option('prefix', {
   alias: 'x',
   type: 'string',
@@ -115,7 +115,7 @@ if (host === null)
 }
 
 /// Logging subsystem with rolling log files
-const {createWriteStream, existsSync, unlinkSync} = require('fs');
+const {createWriteStream, existsSync, unlinkSync, mkdirSync} = require('fs');
 let logStream = null;
 let lastLogDate = null;
 let logFile = null;
@@ -140,6 +140,13 @@ function AllocateLogStream()
   }
 
   logStream?.end();
+
+  if (!existsSync(logFolder))
+  {
+    mkdirSync(logFolder, {recursive: true});
+    log(`Log folder created.`);
+  }
+
   lastLogDate = GetDateStamp();
   logFile = `${logFolder}/${prefix}${lastLogDate}.log`;
   logStream = createWriteStream(logFile, {flags: 'a'});
