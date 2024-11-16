@@ -73,9 +73,15 @@ services:
     command: ["sh", "-c", "apt-get update && apt-get install -y cmake && npm install && node mc-bedrock-chatlog.js -h minecraft-bedrock"]
     stdin_open: true # Keep the container running
     tty: true        # Allocate a pseudo-TTY for the container
+    environment:
+      - TZ=Europe/Prague
+      - LANG=cs_CZ.UTF-8
+      - LC_ALL=cs_CZ.UTF-8
     restart: unless-stopped
 ```
-> The containers should also be in the same virtual network. If you have a fixed network for minecraft, you can connect to it by name like this.
+> You may want to edit the timezone and locale to your country. Timezone will correctly offset time from UTC and locale will change 12/24h clock. If you remove the environment section completely, time will be in UTC.
+
+> The containers should also be in the same virtual network. If you have a fixed network for minecraft, you can connect to it by name like this:
 ```
     networks:
       - internet
