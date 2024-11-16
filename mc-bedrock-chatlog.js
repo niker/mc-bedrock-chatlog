@@ -27,7 +27,7 @@
 /// -l, --logFolder   Log folder
 /// -x, --prefix      Log file prefix
 /// -r, --retry       Keep retrying to connect
-/// -i, --interval    Connection retry interval
+/// -i, --interval    Connection retry interval in seconds
 /// --raw             Log raw packets as JSON
 
 /// The bot will stop when a file named 'stop' is created in the bot's folder.
@@ -102,7 +102,7 @@ const argv = yargs(hideBin(process.argv))
       alias: 'i',
       type: 'number',
       description: 'Connection retry interval',
-      default: 30000
+      default: 30
     }).argv;
 
 const host = argv.host;
@@ -111,7 +111,7 @@ const username = argv.username;
 const logFolder = argv.logFolder;
 const prefix = argv.prefix;
 const retry = argv.retry;
-const interval = argv.interval;
+const interval = argv.interval * 1000;
 const raw = argv.raw;
 const stopSignalFile = 'stop';
 
