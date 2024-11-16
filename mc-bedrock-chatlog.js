@@ -56,54 +56,46 @@ catch (error)
 /// Parse command line arguments
 const yargs = require('yargs/yargs');
 const {hideBin} = require('yargs/helpers');
-const argv = yargs(hideBin(process.argv))
-    .option('host', {
-      alias: 'h',
-      type: 'string',
-      description: 'Client address',
-      default: null
-    })
-    .option('port', {
-      alias: 'p',
-      type: 'number',
-      description: 'Client port',
-      default: 19132
-    })
-    .option('username', {
-      alias: 'u',
-      type: 'string',
-      description: 'Bot username',
-      default: 'Server'
-    })
-    .option('logFolder', {
-      alias: 'l',
-      type: 'string',
-      description: 'Log folder',
-      default: './logs/'
-    })
-    .option('prefix', {
-      alias: 'x',
-      type: 'string',
-      description: 'Log file prefix',
-      default: 'chat-'
-    })
-    .option('raw', {
-      type: 'boolean',
-      description: 'Log raw packets as JSON',
-      default: false
-    })
-    .option('retry', {
-      alias: 'r',
-      type: 'boolean',
-      description: 'Keep retrying to connect',
-      default: true
-    })
-    .option('interval', {
-      alias: 'i',
-      type: 'number',
-      description: 'Connection retry interval',
-      default: 30
-    }).argv;
+const argv = yargs(hideBin(process.argv)).option('host', {
+  alias: 'h',
+  type: 'string',
+  description: 'Client address',
+  default: null
+}).option('port', {
+  alias: 'p',
+  type: 'number',
+  description: 'Client port',
+  default: 19132
+}).option('username', {
+  alias: 'u',
+  type: 'string',
+  description: 'Bot username',
+  default: 'Server'
+}).option('logFolder', {
+  alias: 'l',
+  type: 'string',
+  description: 'Log folder',
+  default: './logs/'
+}).option('prefix', {
+  alias: 'x',
+  type: 'string',
+  description: 'Log file prefix',
+  default: 'chat-'
+}).option('raw', {
+  type: 'boolean',
+  description: 'Log raw packets as JSON',
+  default: false
+}).option('retry', {
+  alias: 'r',
+  type: 'boolean',
+  description: 'Keep retrying to connect',
+  default: true
+}).option('interval', {
+  alias: 'i',
+  type: 'number',
+  description: 'Connection retry interval',
+  default: 30
+}).argv;
 
 const host = argv.host;
 const port = argv.port;
@@ -193,6 +185,7 @@ function Connect()
 
   client.on('join', () => {
     connected = true;
+    log(`Connected.`);
   });
 
   client.on('text', (packet) => {
@@ -326,7 +319,14 @@ function processDeaths(packet)
     // {"type":"translation","needs_translation":true,"message":"death.attack.player","parameters":["PlayerName","AttackerName"],"xuid":"","platform_chat_id":"","filtered_message":""}
 
     const playerName = packet.parameters.length > 0 ? packet.parameters[0] : null;
-    const deathSource = packet.parameters.length > 1 ? packet.parameters[1] : null;
+    let deathSource = packet.parameters.length > 1 ? packet.parameters[1] : null;
+    if (deathSource.startsWith('%entity.'))
+    {
+      // %entity.skeleton.name
+      deathSource = deathSource.replace('%entity.', '');
+      deathSource = deathSource.replace('.name', '');
+    }
+
     let deathReason = packet.message;
     if (packet.message === 'death.fell.accident.generic')
     {
@@ -463,6 +463,11 @@ function processDeaths(packet)
       deathReason = 'was burnt to a crisp whilst fighting';
     }
 
+    if (packet.message === 'death.attack.arrow')
+    {
+      deathReason = 'was shot by arrow';
+    }
+
     if (deathSource !== null)
     {
       deathReason = deathReason + ` caused by [${deathSource}]`;
@@ -473,8 +478,10 @@ function processDeaths(packet)
 }
 
 /// Stop signal handling
-function checkForStopSignal() {
-  if (existsSync(stopSignalFile)) {
+function checkForStopSignal()
+{
+  if (existsSync(stopSignalFile))
+  {
     log('Stop signal received. Terminating the bot.');
     try
     {
@@ -493,7 +500,7 @@ function checkForStopSignal() {
     {
       // ignore
     }
-    
+
     unlinkSync(stopSignalFile);
     process.exit(0);
   }
