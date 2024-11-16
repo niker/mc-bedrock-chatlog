@@ -1,4 +1,4 @@
-/// Minecraft Bedrock Chat Logger (1.0.1)
+/// Minecraft Bedrock Chat Logger (1.0.2)
 ///
 /// A simple bot that logs chat messages and other events from a Bedrock server.
 /// 
@@ -311,7 +311,7 @@ function processDeaths(packet)
     return;
   }
 
-  if (packet.message.startsWith('death.'))
+  if (packet.message?.startsWith('death.'))
   {
     // {"type":"translation","needs_translation":true,"message":"death.fell.accident.generic","parameters":["PlayerName"],"xuid":"","platform_chat_id":"","filtered_message":""}
     // {"type":"translation","needs_translation":true,"message":"death.attack.mob","parameters":["PlayerName","%entity.ghast.name"],"xuid":"","platform_chat_id":"","filtered_message":""}
@@ -320,7 +320,7 @@ function processDeaths(packet)
 
     const playerName = packet.parameters.length > 0 ? packet.parameters[0] : null;
     let deathSource = packet.parameters.length > 1 ? packet.parameters[1] : null;
-    if (deathSource.startsWith('%entity.'))
+    if (deathSource?.startsWith('%entity.'))
     {
       // %entity.skeleton.name
       deathSource = deathSource.replace('%entity.', '');
