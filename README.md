@@ -1,6 +1,6 @@
 # Minecraft Bedrock Chat Logger
 
-NodeJs project that connect to a Minecraft Bedrock server as a local headless player to monitor and log chat and player events.
+NodeJs project that connects to a Minecraft Bedrock server as a local headless player to monitor and log chat and player events.
 
 
 
@@ -10,8 +10,10 @@ The server must have `online-mode=false` in `server.properties` (affects LAN onl
 1) Install latest Node.js
 2) Browse to the folder with `mc-bedrock-chatlog.js`
 3) Run the following commands:
-> `npm i`
-> `node ./mc-bedrock-chatlog.js -h 10.0.0.5 -p 19132`
+   
+> ```npm i```
+
+> ```node ./mc-bedrock-chatlog.js -h 10.0.0.5 -p 19132```
 
 The bot will connect to the server and start logging chat messages to default folder `./logs`.
 
