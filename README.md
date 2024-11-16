@@ -38,3 +38,15 @@ The workaround is to switch it to spectator mode every time after connecting.
 
 `/gamemode spectator Server`
 
+## Log example
+```
+(7:10:08) Connecting to 127.0.0.1:19132 as [Server]...
+(7:10:08) Connected.
+(7:10:58) [Player1] hello
+(7:19:01) * [Player1] fell to their death.
+(7:21:23) * Players are skipping the night.
+(7:28:56) * [Player1] was burnt to a crisp whilst fighting.
+(7:36:18) * Players are skipping the night.
+(7:57:20) * [Player1] left the game.
+(8:41:11) * [Player2] joined the game.
+```
