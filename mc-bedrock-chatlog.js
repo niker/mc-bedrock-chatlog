@@ -1,4 +1,4 @@
-/// Minecraft Bedrock Chat Logger (1.0.3)
+/// Minecraft Bedrock Chat Logger (1.0.4)
 ///
 /// A simple bot that logs chat messages and other events from a Bedrock server.
 /// 
@@ -357,7 +357,7 @@ function processDeaths(packet)
 
     if (packet.message === 'death.attack.inFire')
     {
-      deathReason = 'burned to death';
+      deathReason = 'burned to death in fire';
     }
 
     if (packet.message === 'death.attack.wither')
@@ -473,6 +473,16 @@ function processDeaths(packet)
     if (packet.message === 'death.attack.arrow')
     {
       deathReason = 'was shot by arrow';
+    }
+
+    if (packet.message === 'death.attack.inWall')
+    {
+      deathReason = 'suffocated in a wall';
+    }
+
+    if (packet.message === 'death.attack.onFire')
+    {
+      deathReason = 'burned to death';
     }
 
     if (deathSource !== null)
