@@ -30,7 +30,7 @@
 /// -i, --interval    Connection retry interval in seconds
 /// --raw             Log raw packets as JSON
 /// --motd            Send a whisper to players when they join
-/// --motdAlone       Send a whisper to players when they join and no other players are online
+/// --motdAlone       Send additional whisper to players when they join and no other players are online
 
 /// The bot will stop when a file named 'stop' is created in the bot's folder.
 
@@ -103,7 +103,7 @@ const argv = yargs(hideBin(process.argv)).option('host', {
   default: null
 }).option('motdAlone', {
   type: 'string',
-  description: 'Send a whisper to players when they join and no other players are online',
+  description: 'Send additional whisper to players when they join and no other players are online',
   default: null
 }).argv;
 
