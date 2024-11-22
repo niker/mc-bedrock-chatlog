@@ -27,8 +27,9 @@ The bot will connect to the server and start logging chat messages to default fo
 -r, --retry       Keep retrying to connect on error (default true)
 -i, --interval    Retry interval in seconds (default 30)
 --raw             Log raw packets as JSON (default false)
+--motd            Send a whisper to players when they join
+--motdAlone       Send additional whisper to players when they join and no other players are online
 ```
-
 
 ## Minor annoyance:
 Anonymous LAN users are not persistent and can't be OPed.
