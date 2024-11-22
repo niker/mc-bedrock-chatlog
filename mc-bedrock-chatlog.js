@@ -1,4 +1,4 @@
-/// Minecraft Bedrock Chat Logger (1.0.4)
+/// Minecraft Bedrock Chat Logger (1.0.5)
 ///
 /// A simple bot that logs chat messages and other events from a Bedrock server.
 /// 
@@ -29,6 +29,8 @@
 /// -r, --retry       Keep retrying to connect
 /// -i, --interval    Connection retry interval in seconds
 /// --raw             Log raw packets as JSON
+/// --motd            Send a whisper to players when they join
+/// --motdAlone       Send a whisper to players when they join and no other players are online
 
 /// The bot will stop when a file named 'stop' is created in the bot's folder.
 
@@ -95,6 +97,14 @@ const argv = yargs(hideBin(process.argv)).option('host', {
   type: 'number',
   description: 'Connection retry interval',
   default: 30
+}).option('motd', {
+  type: 'string',
+  description: 'Send a whisper to players when they join',
+  default: null
+}).option('motdAlone', {
+  type: 'string',
+  description: 'Send a whisper to players when they join and no other players are online',
+  default: null
 }).argv;
 
 const host = argv.host;
@@ -277,6 +287,9 @@ function processAnnouncements(packet)
   }
 }
 
+// roughly count players
+let playerCount = 0;
+
 function processConnections(packet)
 {
   if (packet.type !== 'translation')
@@ -288,12 +301,59 @@ function processConnections(packet)
   {
     // {"type":"translation","needs_translation":true,"message":"§e%multiplayer.player.left","parameters":["PlayerName"],"xuid":"","platform_chat_id":"","filtered_message":""}
     log(`* [${packet.parameters[0]}] left the game.`);
+
+    if (playerCount > 0)
+    {
+      playerCount--;
+    }
   }
 
   if (packet.message === '§e%multiplayer.player.joined')
   {
     // {"type":"translation","needs_translation":true,"message":"§e%multiplayer.player.joined","parameters":["PlayerName"],"xuid":"","platform_chat_id":"","filtered_message":""}
     log(`* [${packet.parameters[0]}] joined the game.`);
+
+    playerCount++;
+
+    /// send message of the day after player spawned
+    if (argv.motd !== null || argv.motdAlone !== null)
+    {
+      setTimeout(() => {
+        // whisper to the player after they spawned
+        if (argv.motd !== null)
+        {
+          log(`/w "${packet.parameters[0]}" ${argv.motd}`);
+          client.queue('command_request', {
+            command: `/w "${packet.parameters[0]}" ${argv.motd}`,
+            origin: {
+              type: 'player',
+              uuid: '',
+              request_id: ''
+            },
+            internal: false,
+            version: 52
+          });
+        }
+
+        /// send special message when nobody is online
+        if (argv.motdAlone !== null && playerCount === 1)
+        {
+          log(`/w "${packet.parameters[0]}" ${argv.motdAlone}`);
+          client.queue('command_request', {
+            command: `/w "${packet.parameters[0]}" ${argv.motdAlone}`,
+            origin: {
+              type: 'player',
+              uuid: '',
+              request_id: ''
+            },
+            internal: false,
+            version: 52
+          });
+        }
+
+      }, 6000);
+    }
+
   }
 }
 
@@ -512,6 +572,15 @@ function checkForStopSignal()
     try
     {
       client?.close();
+    }
+    catch
+    {
+      // ignore
+    }
+
+    try
+    {
+      logStream?.end();
     }
     catch
     {
