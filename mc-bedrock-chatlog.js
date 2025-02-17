@@ -192,7 +192,6 @@ function Connect()
   client?.close();
   log(`Connecting to ${host}:${port} as [${username}]...`);
   client = createClient({
-
     host: host,
     port: port,
     username: username,
