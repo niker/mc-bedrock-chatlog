@@ -1,7 +1,7 @@
 {
   "dependencies": {
-    "bedrock-protocol": "^3.43.1",
-    "minecraft-data": "^3.84.1",
+    "bedrock-protocol": "^3.44.0",
+    "minecraft-data": "^3.85.0",
     "minecraft-folder-path": "^1.2.0",
     "prismarine-auth": "^2.7.0",
     "prismarine-nbt": "^2.7.0",
