@@ -1,4 +1,4 @@
-/// Minecraft Bedrock Chat Logger (1.0.12)
+/// Minecraft Bedrock Chat Logger (1.0.13)
 ///
 /// A simple bot that logs chat messages and other events from a Bedrock server.
 /// 
@@ -33,6 +33,21 @@
 /// --motdAlone       Send additional whisper to players when they join and no other players are online
 
 /// The bot will stop when a file named 'stop' is created in the bot's folder.
+
+/// Try to update dependencies before start using npm-check-updates
+
+try
+{
+  const {execSync} = require('child_process');
+  execSync('npm i', {stdio: 'inherit'});
+  execSync('ncu -u', {stdio: 'inherit'});
+  execSync('npm i', {stdio: 'inherit'});
+  execSync('npm audit fix', {stdio: 'inherit'});
+}
+catch (error)
+{
+  // ignore
+}
 
 /// Check if the user installed dependencies
 try
