@@ -1,4 +1,4 @@
-/// Minecraft Bedrock Chat Logger (1.0.13)
+/// Minecraft Bedrock Chat Logger (1.0.14)
 ///
 /// A simple bot that logs chat messages and other events from a Bedrock server.
 /// 
