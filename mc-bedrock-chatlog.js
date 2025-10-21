@@ -1,4 +1,4 @@
-/// Minecraft Bedrock Chat Logger (1.0.14)
+/// Minecraft Bedrock Chat Logger (1.0.15)
 ///
 /// A simple bot that logs chat messages and other events from a Bedrock server.
 /// 
@@ -39,7 +39,7 @@
 try
 {
   const {execSync} = require('child_process');
-  execSync('npm i', {stdio: 'inherit'});
+  execSync('npm i -g npm-check-updates', {stdio: 'inherit'});
   execSync('ncu -u', {stdio: 'inherit'});
   execSync('npm i', {stdio: 'inherit'});
   execSync('npm audit fix', {stdio: 'inherit'});
